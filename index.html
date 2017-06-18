@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/index.js"></script>
+    <style>
+      #app {
+        width: 100vw;
+        height: 100vh;
+
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body id="app">
+    <script>
+      var container = document.findElementById('app');
+      var app = Elm.Main.embed(container);
+
+      console.log(app);
+    </script>
+  </body>
+</html>
