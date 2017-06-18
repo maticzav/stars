@@ -24,6 +24,9 @@ COPY . /app
 # Build
 RUN elm make Main.elm --output build/index.js
 
+# Log files
+RUN ls build/
+
 # Start
 EXPOSE 4000
 ENV PORT=4000

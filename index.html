@@ -1,7 +1,8 @@
-<!DOCTYPE html>
 <html>
   <head>
-    <script src="/static/index.js"></script>
+    <title>Stars</title>
+
+    <script src="/index.js"></script>
     <style>
       #app {
         width: 100vw;
@@ -13,7 +14,7 @@
   </head>
   <body id="app">
     <script>
-      var container = document.findElementById('app');
+      var container = document.getElementById('app');
       var app = Elm.Main.embed(container);
 
       console.log(app);
