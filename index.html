@@ -4,18 +4,85 @@
 
     <script src="/index.js"></script>
     <style>
-      #app {
+      body {
         width: 100vw;
         height: 100vh;
 
         background-color: black;
+
+        text-align: center;
+
+        font-family: -apple-system, BlinkMacSystemFont,
+        Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell,
+        Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
+
+      h1 {
+        color: white;
+
+        margin-top: 30px;
+      }
+
+      button {
+        width: 300px;
+        height: 42px;
+
+        line-height: 42px;
+
+        border: 0;
+        border-radius: 4px;
+        outline: none;
+
+        color: white;
+        font-size: 22px;
+        font-weight: 500;
+
+        background-color: rgb(255,45,85);
+      }
+
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      li {
+        width: 300px;
+        height: 42px;
+
+        line-height: 42px;
+
+        border: 0;
+        border-radius: 4px;
+
+        font-size: 22px;
+
+        background-color: white;
+
+        cursor: pointer;
+      }
+
+      a {
+        color: black;
+
+        text-decoration: none;
+      }
+
+      .selected {
+        background-color: rgb(255,45,85);
+      }
+
+      .active {
+        background-color: white;
+        color: black;
+      }
+
+
     </style>
   </head>
   <body id="app">
     <script>
-      var container = document.getElementById('app');
-      var app = Elm.Main.embed(container);
+      var app = Elm.Main.embed(document.body);
 
       console.log(app);
     </script>

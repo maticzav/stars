@@ -1,12 +1,14 @@
 module Main exposing (..)
 
-import Html
+import Html exposing (Html, button, div, h1, li, text, ul)
+import Html.Attributes exposing (class, classList, href)
+import Html.Events exposing (onClick)
+import List
 import Mouse exposing (Position, downs, moves, ups)
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
+import Svg exposing (Svg, polyline, svg)
+import Svg.Attributes exposing (fill, height, points, stroke, strokeWidth, width)
 import Task
 import Window exposing (Size, resizes)
-import List
 
 
 main : Program Never Model Msg
@@ -37,11 +39,13 @@ init : ( Model, Cmd Msg )
 init =
     let
         initState =
-            { points = []
+            { screen = Settings
+            , points = []
             , mouse = MouseUp
             , window = Size 0 0
-            , latency = 300
+            , threshold = 300
             , n = 4
+            , mirror = True
             }
     in
         ( initState
@@ -55,17 +59,24 @@ initPosition =
 
 
 type alias Model =
-    { points : List Position
+    { screen : Screen
+    , points : List Position
     , mouse : MouseState
     , window : Size
-    , latency : Int
+    , threshold : Int
     , n : Int
+    , mirror : Bool
     }
 
 
 type MouseState
     = MouseUp
     | MouseDown
+
+
+type Screen
+    = Art
+    | Settings
 
 
 
@@ -77,6 +88,9 @@ type Msg
     | MouseDowns Position
     | MouseMoves Position
     | WindowResizes Size
+    | SwitchScreen Screen
+    | SetNgon Int
+    | Mirror
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -109,7 +123,7 @@ update msg ({ mouse, window } as model) =
                     case model.mouse of
                         MouseDown ->
                             (cP :: model.points)
-                                |> List.take model.latency
+                                |> List.take model.threshold
 
                         MouseUp ->
                             model.points
@@ -120,6 +134,21 @@ update msg ({ mouse, window } as model) =
 
         WindowResizes newWindow ->
             ( { model | window = newWindow }
+            , Cmd.none
+            )
+
+        SwitchScreen screen ->
+            ( { model | screen = screen }
+            , Cmd.none
+            )
+
+        SetNgon n ->
+            ( { model | n = n }
+            , Cmd.none
+            )
+
+        Mirror ->
+            ( { model | mirror = not model.mirror }
             , Cmd.none
             )
 
@@ -138,8 +167,51 @@ uncenterPosition { width, height } { x, y } =
 -- View
 
 
-view : Model -> Html.Html Msg
-view ({ window, n, points } as model) =
+view : Model -> Html Msg
+view ({ screen } as model) =
+    case screen of
+        Art ->
+            viewArt model
+
+        Settings ->
+            viewSettings model
+
+
+
+-- Screens
+
+
+viewSettings : Model -> Html Msg
+viewSettings { n, mirror } =
+    let
+        header : Html Msg
+        header =
+            h1 [] [ text "Stars" ]
+
+        mirrorSwitch : Html Msg
+        mirrorSwitch =
+            button [ onClick Mirror, classList [ ( "active", mirror ) ] ] [ text "Mirror" ]
+
+        nOptions : Html Msg
+        nOptions =
+            List.range 2 20
+                |> List.map (viewOption n)
+                |> ul []
+
+        close : Html Msg
+        close =
+            button [ onClick (SwitchScreen Art) ] [ text "Draw" ]
+    in
+        div [] <|
+            header
+                :: mirrorSwitch
+                :: (div [ class "center" ] [ nOptions ])
+                :: close
+                :: []
+
+
+viewArt : Model -> Html Msg
+viewArt { window, n, points } =
     let
         lines =
             List.repeat n points
@@ -149,6 +221,17 @@ view ({ window, n, points } as model) =
         svg
             [ width (toString window.width), height (toString window.height) ]
             lines
+
+
+
+-- Helpers
+
+
+viewOption : Int -> Int -> Html Msg
+viewOption selected v =
+    li
+        [ classList [ ( "selected", selected == v ) ], onClick (SetNgon v) ]
+        [ text <| toString v ]
 
 
 drawLine : Size -> List Position -> Svg Msg
@@ -164,6 +247,7 @@ drawLine window points_ =
             [ fill "none"
             , stroke "#00FFFF"
             , points points__
+            , strokeWidth "2"
             ]
             []
 
@@ -177,9 +261,6 @@ getSymetries n i points =
     let
         angle =
             2 * pi / (toFloat n) * (toFloat i)
-
-        a =
-            Debug.log "i" angle
 
         mirror : Position -> Position
         mirror point =
