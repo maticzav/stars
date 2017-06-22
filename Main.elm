@@ -6,6 +6,7 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Task
 import Window exposing (Size, resizes)
+import List
 
 
 main : Program Never Model Msg
@@ -39,7 +40,8 @@ init =
             { points = []
             , mouse = MouseUp
             , window = Size 0 0
-            , latency = 200
+            , latency = 300
+            , n = 4
             }
     in
         ( initState
@@ -47,11 +49,17 @@ init =
         )
 
 
+initPosition : Position
+initPosition =
+    { x = 0, y = 0 }
+
+
 type alias Model =
     { points : List Position
     , mouse : MouseState
     , window : Size
     , latency : Int
+    , n : Int
     }
 
 
@@ -131,35 +139,16 @@ uncenterPosition { width, height } { x, y } =
 
 
 view : Model -> Html.Html Msg
-view ({ window } as model) =
+view ({ window, n, points } as model) =
     let
-        mPY =
-            model.points
-                |> List.map (\{ x, y } -> Position -x y)
-
-        mPX =
-            model.points
-                |> List.map (\{ x, y } -> Position x -y)
-
-        mPXY =
-            model.points
-                |> List.map (\{ x, y } -> Position -x -y)
-
-        line1 =
-            drawLine window model.points
-
-        line2 =
-            drawLine window mPY
-
-        line3 =
-            drawLine window mPX
-
-        line4 =
-            drawLine window mPXY
+        lines =
+            List.repeat n points
+                |> List.indexedMap (\i ps -> getSymetries n i ps)
+                |> List.map (drawLine window)
     in
         svg
             [ width (toString window.width), height (toString window.height) ]
-            [ line1, line2, line3, line4 ]
+            lines
 
 
 drawLine : Size -> List Position -> Svg Msg
@@ -177,3 +166,65 @@ drawLine window points_ =
             , points points__
             ]
             []
+
+
+
+-- Math
+
+
+getSymetries : Int -> Int -> List Position -> List Position
+getSymetries n i points =
+    let
+        angle =
+            2 * pi / (toFloat n) * (toFloat i)
+
+        a =
+            Debug.log "i" angle
+
+        mirror : Position -> Position
+        mirror point =
+            let
+                ( r, psi ) =
+                    getRPsi point
+
+                psi2 =
+                    psi + angle
+            in
+                getCoordinates ( r, psi2 )
+    in
+        List.map mirror points
+
+
+getRPsi : Position -> ( Float, Float )
+getRPsi { x, y } =
+    let
+        fx =
+            toFloat x
+
+        fy =
+            toFloat y
+
+        r =
+            hypot fy fx
+
+        psi =
+            atan2 fy fx
+    in
+        ( r, psi )
+
+
+hypot : Float -> Float -> Float
+hypot y x =
+    sqrt <| (x * x) + (y * y)
+
+
+getCoordinates : ( Float, Float ) -> Position
+getCoordinates ( r, psi ) =
+    let
+        x =
+            round <| (cos psi) * r
+
+        y =
+            round <| (sin psi) * r
+    in
+        { x = x, y = y }
